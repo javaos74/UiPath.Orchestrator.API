@@ -7,12 +7,14 @@ namespace PTST.UiPath.Orchestrator.API
 {
 public class UiPathOrchestratorAuthentication : AuthenticatorBase
     {
+        readonly string _baseUrl;
         readonly string _clientId;
         readonly string _clientSecret;
         readonly string _scope;
 
-        public UiPathOrchestratorAuthentication(string clientId, string clientSecret, string scope) : base("")
+        public UiPathOrchestratorAuthentication(string baseUrl, string clientId, string clientSecret, string scope) : base("")
         {
+            _baseUrl = baseUrl.Substring(0, baseUrl.IndexOf('/', 8));
             _clientId = clientId;
             _clientSecret = clientSecret;
             _scope = scope;
@@ -32,7 +34,7 @@ public class UiPathOrchestratorAuthentication : AuthenticatorBase
 
         async Task<string> GetToken()
         {
-            RestRequest authRequest = new RestRequest("https://cloud.uipath.com/identity_/connect/token", Method.Post);
+            RestRequest authRequest = new RestRequest($"{_baseUrl}/identity_/connect/token", Method.Post);
             using var client = new RestClient();
             authRequest.AddParameter("grant_type", "client_credentials", ParameterType.GetOrPost);
             authRequest.AddParameter("client_id", this._clientId, ParameterType.GetOrPost);

@@ -3,7 +3,6 @@
     using RestSharp;
     using PTST.UiPath.Orchestrator.Models;
     using System.Text.Json;
-    using RestSharp.Authenticators;
     using System.Text.Json.Serialization;
 
     public class Orchestrator
@@ -17,10 +16,11 @@
 
         public Orchestrator(string baseUrl, string clientId, string clientSecret, string scopes)
         {
-            this.Client = new RestClient(baseUrl.TrimEnd('/'))
+            var options = new RestClientOptions(baseUrl)
             {
-                Authenticator = new UiPathOrchestratorAuthentication(clientId, clientSecret, scopes)
+                Authenticator = new UiPathOrchestratorAuthentication(baseUrl, clientId, clientSecret, scopes)
             };
+            this.Client = new RestClient(options);
         }
         public async Task<T> Create<T>(T data, Folder folder) where T : IUipathResponseSingle
         {
@@ -112,7 +112,7 @@
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                var _ = await ((UiPathOrchestratorAuthentication)this.Client.Authenticator!).RefreshToken();
+                var _ = await ((UiPathOrchestratorAuthentication)this.Client.Options.Authenticator!).RefreshToken();
                 return await this.ExecuteRequest<T>(method, endPoint, json, parameters, headers);
             }
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
@@ -127,7 +127,8 @@
         {
             {typeof(Folder), "odata/Folders" },
             {typeof(QueueDefinition), "odata/QueueDefinitions" },
-            {typeof(QueueItem), "odata/QueueItems"}
+            {typeof(QueueItem), "odata/QueueItems"},
+            {typeof(Release), "odata/Releases" }
         };
     }
 }
